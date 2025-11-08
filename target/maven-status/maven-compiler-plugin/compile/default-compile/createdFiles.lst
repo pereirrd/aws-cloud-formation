@@ -1,0 +1,8 @@
+com/books/core/constants/DynamoTableConstants.class
+com/books/core/Configuration$S3Configuration.class
+com/books/core/Configuration.class
+com/books/repository/BookStore$S3Location.class
+com/books/repository/BookStore.class
+com/books/repository/dynamo/entity/BookEntity.class
+com/books/repository/dynamo/BookRepository.class
+com/books/Main.class

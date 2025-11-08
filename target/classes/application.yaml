@@ -1,0 +1,3 @@
+s3:
+  url: https://example-bucket.s3.amazonaws.com
+
