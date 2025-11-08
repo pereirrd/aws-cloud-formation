@@ -6,7 +6,6 @@ Parameters:
     Type: String
     Default: books
     Description: Nome da tabela DynamoDB
-    AllowedPattern: ^[a-zA-Z0-9_.-]+$
     ConstraintDescription: O nome da tabela deve seguir as regras de nomenclatura do DynamoDB
 
 Resources:

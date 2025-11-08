@@ -6,7 +6,6 @@ Parameters:
     Type: String
     Default: booksEtl
     Description: Nome da função Lambda
-    AllowedPattern: ^[a-zA-Z0-9-_]+$
     ConstraintDescription: O nome da função deve seguir as regras de nomenclatura do Lambda
 
   S3Bucket:
@@ -35,19 +34,6 @@ Parameters:
     Type: Number
     Default: 512
     Description: Tamanho da memória alocada para a função Lambda em MB
-    AllowedValues:
-      - 128
-      - 256
-      - 512
-      - 1024
-      - 2048
-      - 3072
-      - 4096
-      - 5120
-      - 6144
-      - 7168
-      - 8192
-      - 10240
 
 Resources:
   BooksEtlExecutionRole:
