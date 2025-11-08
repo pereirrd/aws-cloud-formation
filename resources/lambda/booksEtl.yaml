@@ -1,0 +1,105 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: "Template para criação da função Lambda booksEtl"
+
+Parameters:
+  FunctionName:
+    Type: String
+    Default: booksEtl
+    Description: Nome da função Lambda
+    ConstraintDescription: O nome da função deve seguir as regras de nomenclatura do Lambda
+
+  S3Bucket:
+    Type: String
+    Default: lambdaCode
+    Description: Nome do bucket S3 onde está armazenado o código da função Lambda
+
+  S3Key:
+    Type: String
+    Description: Chave (caminho) do arquivo JAR no bucket S3
+    Default: booksEtl.jar
+
+  Handler:
+    Type: String
+    Description: Handler da função Lambda (classe:metodo)
+    Default: com.example.BooksEtlHandler::handleRequest
+
+  Timeout:
+    Type: Number
+    Default: 30
+    Description: Timeout da função Lambda em segundos
+    MinValue: 1
+    MaxValue: 900
+
+  MemorySize:
+    Type: Number
+    Default: 512
+    Description: Tamanho da memória alocada para a função Lambda em MB
+
+Resources:
+  BooksEtlExecutionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub "${FunctionName}-execution-role"
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+            Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+      Policies:
+        - PolicyName: LambdaExecutionPolicy
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action:
+                  - logs:CreateLogGroup
+                  - logs:CreateLogStream
+                  - logs:PutLogEvents
+                Resource: !Sub "arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/${FunctionName}*"
+
+  BooksEtlFunction:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: !Ref FunctionName
+      Runtime: java21
+      Handler: !Ref Handler
+      Role: !GetAtt BooksEtlExecutionRole.Arn
+      Code:
+        S3Bucket: !Ref S3Bucket
+        S3Key: !Ref S3Key
+      Timeout: !Ref Timeout
+      MemorySize: !Ref MemorySize
+      Environment:
+        Variables:
+          AWS_REGION: !Ref AWS::Region
+      Description: "Função Lambda para processamento ETL de livros"
+
+  BooksEtlLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub "/aws/lambda/${FunctionName}"
+      RetentionInDays: 14
+
+Outputs:
+  FunctionName:
+    Description: Nome da função Lambda criada
+    Value: !Ref BooksEtlFunction
+    Export:
+      Name: !Sub "${AWS::StackName}-FunctionName"
+
+  FunctionArn:
+    Description: ARN da função Lambda
+    Value: !GetAtt BooksEtlFunction.Arn
+    Export:
+      Name: !Sub "${AWS::StackName}-FunctionArn"
+
+  FunctionRoleArn:
+    Description: ARN da role de execução da função Lambda
+    Value: !GetAtt BooksEtlExecutionRole.Arn
+    Export:
+      Name: !Sub "${AWS::StackName}-FunctionRoleArn"
+
