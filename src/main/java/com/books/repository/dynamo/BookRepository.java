@@ -3,6 +3,8 @@ package com.books.repository.dynamo;
 import com.books.core.constants.DynamoTableConstants;
 import com.books.repository.dynamo.entity.BookEntity;
 
+import jakarta.inject.Singleton;
+
 import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import software.amazon.awssdk.enhanced.dynamodb.DynamoDbEnhancedClient;
@@ -10,6 +12,7 @@ import software.amazon.awssdk.enhanced.dynamodb.DynamoDbTable;
 import software.amazon.awssdk.enhanced.dynamodb.TableSchema;
 import software.amazon.awssdk.enhanced.dynamodb.Key;
 
+@Singleton
 @RequiredArgsConstructor
 public class BookRepository {
 

@@ -1,6 +1,0 @@
-/home/pereirrd/dev/aws-cloud-formation/src/main/java/com/books/Main.java
-/home/pereirrd/dev/aws-cloud-formation/src/main/java/com/books/core/Configuration.java
-/home/pereirrd/dev/aws-cloud-formation/src/main/java/com/books/core/constants/DynamoTableConstants.java
-/home/pereirrd/dev/aws-cloud-formation/src/main/java/com/books/repository/BookStore.java
-/home/pereirrd/dev/aws-cloud-formation/src/main/java/com/books/repository/dynamo/BookRepository.java
-/home/pereirrd/dev/aws-cloud-formation/src/main/java/com/books/repository/dynamo/entity/BookEntity.java

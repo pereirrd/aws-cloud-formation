@@ -1,4 +1,4 @@
-package com.books.repository;
+package com.books.repository.s3;
 
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
@@ -33,7 +33,7 @@ public class BookStore {
             var content = reader.lines().collect(Collectors.joining(System.lineSeparator()));
             return Optional.of(content);
         } catch (Exception exception) {
-            log.error("Failed to read file {} from {}", fileName, configuration.getS3Configuration().url(), exception);
+            log.error("Failed to read file {} from {}", fileName, configuration.getS3Url(), exception);
             return Optional.empty();
         }
     }
@@ -48,13 +48,13 @@ public class BookStore {
         try (ResponseInputStream<GetObjectResponse> inputStream = s3Client.getObject(getObjectRequest)) {
             return Optional.of(inputStream.readAllBytes());
         } catch (Exception exception) {
-            log.error("Failed to read file {} from {}", fileName, configuration.getS3Configuration().url(), exception);
+            log.error("Failed to read file {} from {}", fileName, configuration.getS3Url(), exception);
             return Optional.empty();
         }
     }
 
     private S3Location resolveS3Location(String fileName) {
-        var uri = java.net.URI.create(configuration.getS3Configuration().url());
+        var uri = java.net.URI.create(configuration.getS3Url());
         var bucket = uri.getHost();
         var prefix = uri.getPath();
         var normalizedPrefix = prefix == null ? "" : prefix.replaceFirst("^/", "").replaceAll("/$", "");
