@@ -16,7 +16,7 @@ import software.amazon.awssdk.services.s3.model.GetObjectResponse;
 
 @Slf4j
 @RequiredArgsConstructor
-public class BookStore {
+public class S3Bucket {
 
     private final S3Client s3Client;
     private final Configuration configuration;
