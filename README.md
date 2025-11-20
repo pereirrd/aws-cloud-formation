@@ -6,19 +6,19 @@ Projeto com exemplo de utilização do serviço da AWS, Cloud Formation.
 
 ### Diretório `aws/`
 
-Contém os scripts CloudFormation (YAML) para criação e gerenciamento dos recursos AWS. A estrutura está organizada por serviço:
+Contém os scripts CloudFormation (YAML) para criação e gerenciamento dos recursos AWS:
 
-#### `aws/booksInfra.yaml`
-Template principal que orquestra a infraestrutura completa do cenário de livros, utilizando nested stacks para organizar os recursos.
-
-#### `aws/dynamodb/`
-- **`books.yaml`**: Script CloudFormation para criação da tabela DynamoDB de livros.
+#### `aws/booksInfra-no-lambda.yaml`
+Template principal que cria a infraestrutura básica do cenário de livros, incluindo:
+- Tabela DynamoDB `books` com chave composta (autor como partition key e gênero como sort key)
+- Bucket S3 `BookStorageBucket` para armazenamento dos arquivos CSV
+- Configurações de segurança e criptografia para ambos os recursos
 
 #### `aws/lambda/`
 - **`booksEtl.yaml`**: Script CloudFormation para criação da função Lambda de ETL (Extract, Transform, Load) dos livros.
 
-#### `aws/s3_bucket/`
-- **`bookStorage.yaml`**: Script CloudFormation para criação do bucket S3 de armazenamento dos livros.
+#### `aws/literatura_brasileira.csv`
+Arquivo CSV de exemplo contendo dados de livros da literatura brasileira para processamento pela função Lambda.
 
 ### Diretório `src/`
 
