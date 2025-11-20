@@ -1,0 +1,71 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: "Template simplificado para criação da infraestrutura de livros (DynamoDB e S3)"
+
+Resources:
+  BooksTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: books
+      AttributeDefinitions:
+        - AttributeName: autor
+          AttributeType: S
+        - AttributeName: genero
+          AttributeType: S
+      KeySchema:
+        - AttributeName: autor
+          KeyType: HASH
+        - AttributeName: genero
+          KeyType: RANGE
+      BillingMode: PAY_PER_REQUEST
+      StreamSpecification:
+        StreamViewType: NEW_AND_OLD_IMAGES
+
+  BookStorageBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault:
+              SSEAlgorithm: AES256
+
+Outputs:
+  DynamoDbTableName:
+    Description: Nome da tabela DynamoDB criada
+    Value: !Ref BooksTable
+    Export:
+      Name: !Sub ${AWS::StackName}-DynamoDbTableName
+
+  DynamoDbTableArn:
+    Description: ARN da tabela DynamoDB
+    Value: !GetAtt BooksTable.Arn
+    Export:
+      Name: !Sub ${AWS::StackName}-DynamoDbTableArn
+
+  DynamoDbTableStreamArn:
+    Description: ARN do stream da tabela DynamoDB
+    Value: !GetAtt BooksTable.StreamArn
+    Export:
+      Name: !Sub ${AWS::StackName}-DynamoDbTableStreamArn
+
+  BookStorageBucketName:
+    Description: Nome do bucket S3 criado
+    Value: !Ref BookStorageBucket
+    Export:
+      Name: !Sub ${AWS::StackName}-BookStorageBucketName
+
+  BookStorageBucketArn:
+    Description: ARN do bucket S3
+    Value: !GetAtt BookStorageBucket.Arn
+    Export:
+      Name: !Sub ${AWS::StackName}-BookStorageBucketArn
+
+  BookStorageBucketDomainName:
+    Description: Nome de domínio do bucket S3
+    Value: !GetAtt BookStorageBucket.DomainName
+    Export:
+      Name: !Sub ${AWS::StackName}-BookStorageBucketDomainName
