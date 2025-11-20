@@ -50,8 +50,7 @@ class S3BucketTest {
         var inputStream = new ByteArrayInputStream(fileBytes);
         var realResponseInputStream = new ResponseInputStream<>(
                 GetObjectResponse.builder().build(),
-                inputStream
-        );
+                inputStream);
 
         when(s3Client.getObject(any(GetObjectRequest.class))).thenReturn(realResponseInputStream);
 
@@ -125,4 +124,3 @@ class S3BucketTest {
         verify(s3Client).getObject(any(GetObjectRequest.class));
     }
 }
-

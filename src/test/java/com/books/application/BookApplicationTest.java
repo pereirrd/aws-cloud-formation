@@ -144,4 +144,3 @@ class BookApplicationTest {
         verify(bookRepository).save(bookEntity);
     }
 }
-

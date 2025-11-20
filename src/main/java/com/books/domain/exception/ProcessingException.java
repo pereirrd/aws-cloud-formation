@@ -10,4 +10,3 @@ public class ProcessingException extends RuntimeException {
         super(message, cause);
     }
 }
-
