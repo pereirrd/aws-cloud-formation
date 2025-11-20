@@ -13,8 +13,14 @@ import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbSortK
 public class BookEntity {
 
     @Getter(onMethod_ = { @DynamoDbPartitionKey, @DynamoDbAttribute("autor") })
-    private String autor;
+    private String author;
 
     @Getter(onMethod_ = { @DynamoDbSortKey, @DynamoDbAttribute("genero") })
-    private String genero;
+    private String genre;
+
+    @Getter(onMethod_ = { @DynamoDbAttribute("periodo") })
+    private String period;
+
+    @Getter(onMethod_ = { @DynamoDbAttribute("titulo") })
+    private String title;
 }
