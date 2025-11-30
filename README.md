@@ -2,23 +2,63 @@
 
 Projeto com exemplo de utilização do serviço da AWS, Cloud Formation.
 
+## 🚀 Deploy Rápido
+
+Para fazer o deploy da aplicação na AWS, utilize o script automatizado:
+
+```bash
+# Deploy completo (DynamoDB + S3 + Lambda)
+./aws/deploy.sh complete
+
+# Deploy apenas do Lambda (requer DynamoDB e S3 existentes)
+./aws/deploy.sh
+
+# Ver ajuda
+./aws/deploy.sh help
+```
+
+O script automaticamente:
+- ✅ Compila o projeto com Maven
+- ✅ Gera o uber JAR com todas as dependências
+- ✅ Faz upload do JAR para o S3
+- ✅ Valida o template CloudFormation
+- ✅ Cria ou atualiza o stack com as permissões necessárias
+
+**Pré-requisitos:**
+- AWS CLI configurado com credenciais válidas
+- Maven instalado
+- Bucket S3 `lambdaCode` criado (o script cria automaticamente se não existir)
+
+Para mais detalhes sobre o processo de deploy, consulte o arquivo [`DEPLOY.md`](DEPLOY.md).
+
 ## Estrutura do Projeto
 
 ### Diretório `aws/`
 
-Contém os scripts CloudFormation (YAML) para criação e gerenciamento dos recursos AWS:
+Contém os scripts CloudFormation (YAML) e o script de deploy automatizado para criação e gerenciamento dos recursos AWS:
 
-#### `aws/booksInfra-no-lambda.yaml`
-Template principal que cria a infraestrutura básica do cenário de livros, incluindo:
-- Tabela DynamoDB `books` com chave composta (autor como partition key e gênero como sort key)
-- Bucket S3 `BookStorageBucket` para armazenamento dos arquivos CSV
-- Configurações de segurança e criptografia para ambos os recursos
+#### Templates CloudFormation
 
-#### `aws/lambda/`
-- **`booksEtl.yaml`**: Script CloudFormation para criação da função Lambda de ETL (Extract, Transform, Load) dos livros.
+- **`aws/booksInfra-complete.yaml`**: Template completo que cria toda a infraestrutura em um único stack:
+  - Tabela DynamoDB `books` com chave composta (autor como partition key e gênero como sort key)
+  - Bucket S3 `BookStorageBucket` para armazenamento dos arquivos CSV
+  - Função Lambda `booksEtl` com permissões para acessar DynamoDB e S3
+  - Role IAM com todas as permissões necessárias
+  - Log Group do CloudWatch
+  - Configurações de segurança e criptografia
 
-#### `aws/literatura_brasileira.csv`
-Arquivo CSV de exemplo contendo dados de livros da literatura brasileira para processamento pela função Lambda.
+- **`aws/booksInfra-no-lambda.yaml`**: Template que cria apenas a infraestrutura básica (sem Lambda):
+  - Tabela DynamoDB `books` com chave composta (autor como partition key e gênero como sort key)
+  - Bucket S3 `BookStorageBucket` para armazenamento dos arquivos CSV
+  - Configurações de segurança e criptografia para ambos os recursos
+
+- **`aws/lambda/booksEtl.yaml`**: Template para criação apenas da função Lambda de ETL (Extract, Transform, Load) dos livros. Requer que DynamoDB e S3 já existam.
+
+#### Scripts e Recursos
+
+- **`aws/deploy.sh`**: Script bash automatizado para fazer o deploy completo da aplicação. Veja a seção [Deploy Rápido](#-deploy-rápido) acima.
+
+- **`aws/literatura_brasileira.csv`**: Arquivo CSV de exemplo contendo dados de livros da literatura brasileira para processamento pela função Lambda.
 
 ### Diretório `src/`
 
@@ -57,6 +97,20 @@ Recursos da aplicação:
 
 #### `src/test/`
 Testes unitários e de integração do código Java.
+
+### Configuração do Projeto
+
+O projeto utiliza Maven para gerenciamento de dependências e build. Principais configurações:
+
+- **Java 21**: Runtime do Lambda
+- **Maven Shade Plugin**: Configurado para gerar uber JAR com todas as dependências incluídas
+- **AWS SDK 2.34.0**: Para integração com serviços AWS (Lambda, S3, DynamoDB)
+- **Lombok**: Para redução de boilerplate
+- **MapStruct**: Para mapeamento entre objetos de domínio e entidades
+- **OpenCSV**: Para parsing de arquivos CSV
+- **Jakarta CDI**: Para injeção de dependências
+
+O arquivo `pom.xml` contém todas as dependências e configurações necessárias. O plugin `maven-shade-plugin` está configurado para criar automaticamente um uber JAR durante o build.
 
 ## Funcionamento da Função Lambda
 
