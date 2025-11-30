@@ -12,6 +12,22 @@ Este guia explica como fazer o deploy da função Lambda usando o template Cloud
    - Criar recursos Lambda, IAM e CloudWatch Logs
    - Fazer upload de arquivos no S3
 
+## ⚙️ Região AWS
+
+**Região padrão:** `us-east-1` (N. Virginia)
+
+Todos os recursos AWS serão criados na região **us-east-1** por padrão. Esta configuração está definida em:
+- Script de deploy (`aws/deploy.sh`)
+- Templates CloudFormation
+- Arquivo de configuração (`application.properties`)
+
+**Importante:** Se você precisar usar uma região diferente, será necessário:
+1. Atualizar a variável `AWS_REGION` no script `aws/deploy.sh`
+2. Atualizar a URL do S3 no arquivo `application.properties` com a região correta
+3. Adicionar `--region REGIAO` em todos os comandos AWS CLI manuais
+
+**Nota:** O nome do bucket S3 (`my-s3-books-cloudformation-test`) deve ser único globalmente na AWS, independente da região.
+
 ## Passo a Passo
 
 ### 1. Compilar o Projeto Java
@@ -40,7 +56,7 @@ cp target/aws-cloud-formation-1.0.0-SNAPSHOT.jar booksEtl.jar
 Faça upload do arquivo JAR para o bucket S3 `lambdaCode`:
 
 ```bash
-aws s3 cp booksEtl.jar s3://lambdaCode/booksEtl.jar
+aws s3 cp booksEtl.jar s3://lambdaCode/booksEtl.jar --region us-east-1
 ```
 
 **Importante:** Certifique-se de que o bucket `lambdaCode` existe. Se não existir, crie-o primeiro:
@@ -56,12 +72,16 @@ Antes de fazer o deploy, valide o template:
 ```bash
 # Para o template apenas do Lambda
 aws cloudformation validate-template \
-  --template-body file://aws/lambda/booksEtl.yaml
+  --template-body file://aws/lambda/booksEtl.yaml \
+  --region us-east-1
 
 # Para o template completo (DynamoDB + S3 + Lambda)
 aws cloudformation validate-template \
-  --template-body file://aws/booksInfra-complete.yaml
+  --template-body file://aws/booksInfra-complete.yaml \
+  --region us-east-1
 ```
+
+**Nota:** A validação do template não requer região, mas é recomendado especificar para consistência com os demais comandos.
 
 ### 5. Criar o Stack CloudFormation
 
@@ -75,6 +95,7 @@ Crie o stack apenas com a função Lambda (requer que DynamoDB e S3 já existam)
 aws cloudformation create-stack \
   --stack-name books-etl-lambda \
   --template-body file://aws/lambda/booksEtl.yaml \
+  --region us-east-1 \
   --capabilities CAPABILITY_NAMED_IAM
 ```
 
@@ -86,12 +107,14 @@ Crie o stack completo com DynamoDB, S3 e Lambda em um único template:
 aws cloudformation create-stack \
   --stack-name books-infra-complete \
   --template-body file://aws/booksInfra-complete.yaml \
+  --region us-east-1 \
   --capabilities CAPABILITY_NAMED_IAM
 ```
 
 **Explicação dos parâmetros:**
 - `--stack-name`: Nome do stack CloudFormation
 - `--template-body`: Caminho para o arquivo YAML do template
+- `--region us-east-1`: Região AWS onde os recursos serão criados (padrão do projeto)
 - `--capabilities CAPABILITY_NAMED_IAM`: **OBRIGATÓRIO** - Necessário porque ambos os templates criam recursos IAM (Role). Sem esta flag, o deploy falhará.
 
 ### 6. Verificar o Status do Deploy
@@ -99,13 +122,13 @@ aws cloudformation create-stack \
 Acompanhe o progresso da criação do stack:
 
 ```bash
-aws cloudformation describe-stacks --stack-name books-etl-lambda
+aws cloudformation describe-stacks --stack-name books-etl-lambda --region us-east-1
 ```
 
 Ou acompanhe em tempo real:
 
 ```bash
-aws cloudformation wait stack-create-complete --stack-name books-etl-lambda
+aws cloudformation wait stack-create-complete --stack-name books-etl-lambda --region us-east-1
 ```
 
 ### 7. Verificar os Recursos Criados
@@ -113,7 +136,7 @@ aws cloudformation wait stack-create-complete --stack-name books-etl-lambda
 Após o deploy, verifique se a função Lambda foi criada:
 
 ```bash
-aws lambda get-function --function-name booksEtl
+aws lambda get-function --function-name booksEtl --region us-east-1
 ```
 
 ## Atualizar o Lambda (Re-deploy)
@@ -124,7 +147,7 @@ Quando você fizer alterações no código e precisar atualizar o Lambda:
 
 ```bash
 mvn clean package
-aws s3 cp booksEtl.jar s3://lambdaCode/booksEtl.jar
+aws s3 cp booksEtl.jar s3://lambdaCode/booksEtl.jar --region us-east-1
 ```
 
 ### 2. Atualizar o Stack
@@ -134,12 +157,14 @@ aws s3 cp booksEtl.jar s3://lambdaCode/booksEtl.jar
 aws cloudformation update-stack \
   --stack-name books-etl-lambda \
   --template-body file://aws/lambda/booksEtl.yaml \
+  --region us-east-1 \
   --capabilities CAPABILITY_NAMED_IAM
 
 # Para o template completo
 aws cloudformation update-stack \
   --stack-name books-infra-complete \
   --template-body file://aws/booksInfra-complete.yaml \
+  --region us-east-1 \
   --capabilities CAPABILITY_NAMED_IAM
 ```
 
@@ -152,7 +177,7 @@ aws cloudformation update-stack \
 Para remover todos os recursos criados:
 
 ```bash
-aws cloudformation delete-stack --stack-name books-etl-lambda
+aws cloudformation delete-stack --stack-name books-etl-lambda --region us-east-1
 ```
 
 ## Troubleshooting
@@ -173,7 +198,7 @@ aws cloudformation delete-stack --stack-name books-etl-lambda
 ### Ver logs do Lambda
 
 ```bash
-aws logs tail /aws/lambda/booksEtl --follow
+aws logs tail /aws/lambda/booksEtl --follow --region us-east-1
 ```
 
 ### Erro: ClassNotFoundException ou NoClassDefFoundError

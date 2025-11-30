@@ -23,6 +23,7 @@ Resources:
   BookStorageBucket:
     Type: AWS::S3::Bucket
     Properties:
+      BucketName: my-s3-books-cloudformation-test
       PublicAccessBlockConfiguration:
         BlockPublicAcls: true
         BlockPublicPolicy: true
@@ -152,4 +153,3 @@ Outputs:
     Value: !GetAtt BooksEtlExecutionRole.Arn
     Export:
       Name: !Sub "${AWS::StackName}-FunctionRoleArn"
-

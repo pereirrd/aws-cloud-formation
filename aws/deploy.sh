@@ -18,6 +18,7 @@ BUCKET_NAME="lambdaCode"
 JAR_NAME="booksEtl.jar"
 TEMPLATE_PATH="$PROJECT_ROOT/aws/lambda/booksEtl.yaml"
 JAR_SOURCE="$PROJECT_ROOT/target/aws-cloud-formation-1.0.0-SNAPSHOT.jar"
+AWS_REGION="us-east-1"
 
 # Permitir escolher o template via argumento
 if [ "$1" == "complete" ]; then
@@ -83,9 +84,8 @@ echo -e "${GREEN}✓ JAR preparado: $JAR_NAME${NC}\n"
 # Verificar se o bucket existe
 echo -e "${YELLOW}Verificando bucket S3...${NC}"
 if ! aws s3 ls "s3://$BUCKET_NAME" &> /dev/null; then
-    echo -e "${YELLOW}Bucket não encontrado. Criando bucket $BUCKET_NAME...${NC}"
-    REGION=$(aws configure get region || echo "us-east-1")
-    aws s3 mb "s3://$BUCKET_NAME" --region "$REGION"
+    echo -e "${YELLOW}Bucket não encontrado. Criando bucket $BUCKET_NAME na região $AWS_REGION...${NC}"
+    aws s3 mb "s3://$BUCKET_NAME" --region "$AWS_REGION"
     if [ $? -ne 0 ]; then
         echo -e "${RED}Erro ao criar bucket${NC}"
         exit 1
@@ -97,7 +97,7 @@ fi
 
 # Fazer upload para S3
 echo -e "${YELLOW}Fazendo upload para S3...${NC}"
-aws s3 cp "$JAR_NAME" "s3://$BUCKET_NAME/$JAR_NAME"
+aws s3 cp "$JAR_NAME" "s3://$BUCKET_NAME/$JAR_NAME" --region "$AWS_REGION"
 if [ $? -ne 0 ]; then
     echo -e "${RED}Erro ao fazer upload para S3${NC}"
     exit 1
@@ -106,7 +106,7 @@ echo -e "${GREEN}✓ Upload concluído${NC}\n"
 
 # Validar template
 echo -e "${YELLOW}Validando template CloudFormation...${NC}"
-if aws cloudformation validate-template --template-body "file://$TEMPLATE_PATH" &> /dev/null; then
+if aws cloudformation validate-template --template-body "file://$TEMPLATE_PATH" --region "$AWS_REGION" &> /dev/null; then
     echo -e "${GREEN}✓ Template válido${NC}\n"
 else
     echo -e "${RED}Erro: Template inválido${NC}"
@@ -115,7 +115,7 @@ fi
 
 # Verificar se o stack já existe
 echo -e "${YELLOW}Verificando stack existente...${NC}"
-if aws cloudformation describe-stacks --stack-name "$STACK_NAME" &> /dev/null; then
+if aws cloudformation describe-stacks --stack-name "$STACK_NAME" --region "$AWS_REGION" &> /dev/null; then
     echo -e "${YELLOW}Stack já existe. Atualizando...${NC}"
     OPERATION="update"
 else
@@ -124,10 +124,11 @@ else
 fi
 
 # Criar ou atualizar stack
-echo -e "${YELLOW}Executando deploy do CloudFormation...${NC}"
+echo -e "${YELLOW}Executando deploy do CloudFormation na região $AWS_REGION...${NC}"
 aws cloudformation deploy \
     --template-file "$TEMPLATE_PATH" \
     --stack-name "$STACK_NAME" \
+    --region "$AWS_REGION" \
     --capabilities CAPABILITY_NAMED_IAM
 
 if [ $? -ne 0 ]; then
@@ -139,8 +140,8 @@ echo -e "\n${GREEN}=== Deploy concluído com sucesso! ===${NC}\n"
 
 # Mostrar informações do Lambda
 echo -e "${YELLOW}Informações da função Lambda:${NC}"
-aws lambda get-function --function-name booksEtl --query 'Configuration.[FunctionName,FunctionArn,Runtime,LastModified]' --output table
+aws lambda get-function --function-name booksEtl --region "$AWS_REGION" --query 'Configuration.[FunctionName,FunctionArn,Runtime,LastModified]' --output table
 
 echo -e "\n${GREEN}Para ver os logs do Lambda, execute:${NC}"
-echo -e "aws logs tail /aws/lambda/booksEtl --follow"
+echo -e "aws logs tail /aws/lambda/booksEtl --follow --region $AWS_REGION"
 

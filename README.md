@@ -29,6 +29,8 @@ O script automaticamente:
 - Maven instalado
 - Bucket S3 `lambdaCode` criado (o script cria automaticamente se não existir)
 
+**Região AWS:** Todos os recursos serão criados na região **us-east-1** (N. Virginia) por padrão. Esta configuração está definida no script de deploy e nos templates CloudFormation.
+
 Para mais detalhes sobre o processo de deploy, consulte o arquivo [`DEPLOY.md`](DEPLOY.md).
 
 ## Estrutura do Projeto
