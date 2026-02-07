@@ -1,172 +1,174 @@
+[Português](README.pt-br.md) | [Español](README.es.md)
+
 # aws-cloud-formation
 
-Projeto com exemplo de utilização do serviço da AWS, Cloud Formation.
+Project demonstrating the use of AWS CloudFormation service.
 
-## 🚀 Deploy Rápido
+## 🚀 Quick Deploy
 
-Para fazer o deploy da aplicação na AWS, utilize o script automatizado:
+To deploy the application to AWS, use the automated script:
 
 ```bash
-# Deploy completo (DynamoDB + S3 + Lambda)
+# Complete deployment (DynamoDB + S3 + Lambda)
 ./aws/deploy.sh complete
 
-# Deploy apenas do Lambda (requer DynamoDB e S3 existentes)
+# Deploy Lambda only (requires existing DynamoDB and S3)
 ./aws/deploy.sh
 
-# Ver ajuda
+# Show help
 ./aws/deploy.sh help
 ```
 
-O script automaticamente:
-- ✅ Compila o projeto com Maven
-- ✅ Gera o uber JAR com todas as dependências
-- ✅ Faz upload do JAR para o S3
-- ✅ Valida o template CloudFormation
-- ✅ Cria ou atualiza o stack com as permissões necessárias
+The script automatically:
+- ✅ Compiles the project with Maven
+- ✅ Generates the uber JAR with all dependencies
+- ✅ Uploads the JAR to S3
+- ✅ Validates the CloudFormation template
+- ✅ Creates or updates the stack with necessary permissions
 
-**Pré-requisitos:**
-- AWS CLI configurado com credenciais válidas
-- Maven instalado
-- Bucket S3 `lambdaCode` criado (o script cria automaticamente se não existir)
+**Prerequisites:**
+- AWS CLI configured with valid credentials
+- Maven installed
+- S3 bucket `lambdaCode` created (the script creates it automatically if it doesn't exist)
 
-**Região AWS:** Todos os recursos serão criados na região **us-east-1** (N. Virginia) por padrão. Esta configuração está definida no script de deploy e nos templates CloudFormation.
+**AWS Region:** All resources will be created in the **us-east-1** (N. Virginia) region by default. This configuration is defined in the deploy script and CloudFormation templates.
 
-Para mais detalhes sobre o processo de deploy, consulte o arquivo [`DEPLOY.md`](DEPLOY.md).
+For more details about the deployment process, see the [`DEPLOY.md`](DEPLOY.md) file.
 
-## Estrutura do Projeto
+## Project Structure
 
-### Diretório `aws/`
+### `aws/` Directory
 
-Contém os scripts CloudFormation (YAML) e o script de deploy automatizado para criação e gerenciamento dos recursos AWS:
+Contains CloudFormation scripts (YAML) and the automated deployment script for creating and managing AWS resources:
 
-#### Templates CloudFormation
+#### CloudFormation Templates
 
-- **`aws/booksInfra-complete.yaml`**: Template completo que cria toda a infraestrutura em um único stack:
-  - Tabela DynamoDB `books` com chave composta (autor como partition key e gênero como sort key)
-  - Bucket S3 `BookStorageBucket` para armazenamento dos arquivos CSV
-  - Função Lambda `booksEtl` com permissões para acessar DynamoDB e S3
-  - Role IAM com todas as permissões necessárias
-  - Log Group do CloudWatch
-  - Configurações de segurança e criptografia
+- **`aws/booksInfra-complete.yaml`**: Complete template that creates all infrastructure in a single stack:
+  - DynamoDB table `books` with composite key (author as partition key and genre as sort key)
+  - S3 bucket `BookStorageBucket` for storing CSV files
+  - Lambda function `booksEtl` with permissions to access DynamoDB and S3
+  - IAM Role with all necessary permissions
+  - CloudWatch Log Group
+  - Security and encryption settings
 
-- **`aws/booksInfra-no-lambda.yaml`**: Template que cria apenas a infraestrutura básica (sem Lambda):
-  - Tabela DynamoDB `books` com chave composta (autor como partition key e gênero como sort key)
-  - Bucket S3 `BookStorageBucket` para armazenamento dos arquivos CSV
-  - Configurações de segurança e criptografia para ambos os recursos
+- **`aws/booksInfra-no-lambda.yaml`**: Template that creates only the basic infrastructure (without Lambda):
+  - DynamoDB table `books` with composite key (author as partition key and genre as sort key)
+  - S3 bucket `BookStorageBucket` for storing CSV files
+  - Security and encryption settings for both resources
 
-- **`aws/lambda/booksEtl.yaml`**: Template para criação apenas da função Lambda de ETL (Extract, Transform, Load) dos livros. Requer que DynamoDB e S3 já existam.
+- **`aws/lambda/booksEtl.yaml`**: Template for creating only the Lambda ETL (Extract, Transform, Load) function for books. Requires DynamoDB and S3 to already exist.
 
-#### Scripts e Recursos
+#### Scripts and Resources
 
-- **`aws/deploy.sh`**: Script bash automatizado para fazer o deploy completo da aplicação. Veja a seção [Deploy Rápido](#-deploy-rápido) acima.
+- **`aws/deploy.sh`**: Automated bash script to deploy the complete application. See the [Quick Deploy](#-quick-deploy) section above.
 
-- **`aws/literatura_brasileira.csv`**: Arquivo CSV de exemplo contendo dados de livros da literatura brasileira para processamento pela função Lambda.
+- **`aws/literatura_brasileira.csv`**: Example CSV file containing Brazilian literature book data for processing by the Lambda function.
 
-### Diretório `src/`
+### `src/` Directory
 
-Contém o código fonte Java da função AWS Lambda criada pelos scripts CloudFormation.
+Contains the Java source code of the AWS Lambda function created by the CloudFormation scripts.
 
 #### `src/main/java/com/books/`
-Estrutura do código Java organizada em pacotes:
+Java code structure organized in packages:
 
-- **`Main.java`**: Classe principal com método `main` para inicialização da aplicação.
-- **`application/`**: Camada de aplicação:
-  - `BookApplication.java`: Classe principal que orquestra o fluxo de processamento ETL dos livros.
-- **`core/`**: Classes de configuração e infraestrutura:
-  - `Configuration.java`: Carrega e gerencia as configurações da aplicação a partir do arquivo `application.properties`.
-  - `DynamoDbClientFactory.java`: Factory para criação do cliente DynamoDB Enhanced Client.
-- **`domain/`**: Camada de domínio:
-  - **`book/`**: Modelos e mapeadores de livros:
-    - `Book.java`: Modelo de domínio representando um livro com atributos: título, autor, gênero e período.
-    - `BookMapper.java`: Interface MapStruct para conversão entre `Book` (domínio) e `BookEntity` (persistência).
-  - **`csv/`**: Serviços de processamento CSV:
-    - `CsvService.java`: Serviço responsável por fazer o parsing de arquivos CSV para objetos `Book`.
-  - **`exception/`**: Exceções customizadas:
-    - `FileNotFoundException.java`: Exceção lançada quando um arquivo não é encontrado no S3.
-    - `ProcessingException.java`: Exceção genérica para erros durante o processamento.
-- **`repository/`**: Camada de acesso a dados:
-  - **`dynamo/`**: Repositório e entidades DynamoDB:
-    - `BookRepository.java`: Repositório para operações CRUD com livros no DynamoDB (save, findByAutorAndGenero, delete).
-    - `entity/BookEntity.java`: Entidade mapeada da tabela DynamoDB com chave composta (autor como partition key e gênero como sort key).
-  - **`s3/`**: Repositório S3:
-    - `S3Bucket.java`: Classe para leitura de arquivos do bucket S3, suportando leitura como String ou array de bytes.
+- **`Main.java`**: Main class with `main` method for application initialization.
+- **`application/`**: Application layer:
+  - `BookApplication.java`: Main class that orchestrates the ETL processing flow for books.
+- **`core/`**: Configuration and infrastructure classes:
+  - `Configuration.java`: Loads and manages application configuration from the `application.properties` file.
+  - `DynamoDbClientFactory.java`: Factory for creating the DynamoDB Enhanced Client.
+- **`domain/`**: Domain layer:
+  - **`book/`**: Book models and mappers:
+    - `Book.java`: Domain model representing a book with attributes: title, author, genre, and period.
+    - `BookMapper.java`: MapStruct interface for conversion between `Book` (domain) and `BookEntity` (persistence).
+  - **`csv/`**: CSV processing services:
+    - `CsvService.java`: Service responsible for parsing CSV files into `Book` objects.
+  - **`exception/`**: Custom exceptions:
+    - `FileNotFoundException.java`: Exception thrown when a file is not found in S3.
+    - `ProcessingException.java`: Generic exception for errors during processing.
+- **`repository/`**: Data access layer:
+  - **`dynamo/`**: DynamoDB repository and entities:
+    - `BookRepository.java`: Repository for CRUD operations with books in DynamoDB (save, findByAutorAndGenero, delete).
+    - `entity/BookEntity.java`: Entity mapped from the DynamoDB table with composite key (author as partition key and genre as sort key).
+  - **`s3/`**: S3 repository:
+    - `S3Bucket.java`: Class for reading files from the S3 bucket, supporting reading as String or byte array.
 
 #### `src/main/resources/`
-Recursos da aplicação:
-- **`application.properties`**: Arquivo de configuração contendo:
-  - `s3.url`: URL do bucket S3 onde os arquivos CSV estão armazenados.
-  - `dynamodb.table.books`: Nome da tabela DynamoDB onde os livros serão persistidos.
+Application resources:
+- **`application.properties`**: Configuration file containing:
+  - `s3.url`: URL of the S3 bucket where CSV files are stored.
+  - `dynamodb.table.books`: Name of the DynamoDB table where books will be persisted.
 
 #### `src/test/`
-Testes unitários e de integração do código Java.
+Unit and integration tests for the Java code.
 
-### Configuração do Projeto
+### Project Configuration
 
-O projeto utiliza Maven para gerenciamento de dependências e build. Principais configurações:
+The project uses Maven for dependency management and build. Main configurations:
 
-- **Java 21**: Runtime do Lambda
-- **Maven Shade Plugin**: Configurado para gerar uber JAR com todas as dependências incluídas
-- **AWS SDK 2.34.0**: Para integração com serviços AWS (Lambda, S3, DynamoDB)
-- **Lombok**: Para redução de boilerplate
-- **MapStruct**: Para mapeamento entre objetos de domínio e entidades
-- **OpenCSV**: Para parsing de arquivos CSV
-- **Jakarta CDI**: Para injeção de dependências
+- **Java 21**: Lambda runtime
+- **Maven Shade Plugin**: Configured to generate uber JAR with all dependencies included
+- **AWS SDK 2.34.0**: For integration with AWS services (Lambda, S3, DynamoDB)
+- **Lombok**: For boilerplate reduction
+- **MapStruct**: For mapping between domain objects and entities
+- **OpenCSV**: For CSV file parsing
+- **Jakarta CDI**: For dependency injection
 
-O arquivo `pom.xml` contém todas as dependências e configurações necessárias. O plugin `maven-shade-plugin` está configurado para criar automaticamente um uber JAR durante o build.
+The `pom.xml` file contains all necessary dependencies and configurations. The `maven-shade-plugin` is configured to automatically create an uber JAR during the build.
 
-## Funcionamento da Função Lambda
+## Lambda Function Operation
 
-A função Lambda implementa um processo ETL (Extract, Transform, Load) para processar arquivos CSV de livros armazenados no S3 e persistir os dados no DynamoDB.
+The Lambda function implements an ETL (Extract, Transform, Load) process to process CSV files of books stored in S3 and persist the data in DynamoDB.
 
-### Fluxo de Processamento
+### Processing Flow
 
-O fluxo de processamento é orquestrado pela classe `BookApplication` através do método `processCsvFile(String fileName)`:
+The processing flow is orchestrated by the `BookApplication` class through the `processCsvFile(String fileName)` method:
 
-1. **Extract (Extração)**:
-   - A função recebe o nome de um arquivo CSV como parâmetro.
-   - O `S3Bucket` lê o arquivo do bucket S3 configurado, retornando o conteúdo como array de bytes.
-   - A URL do S3 é resolvida a partir da configuração (`s3.url`), extraindo o bucket e o prefixo/path.
-   - Se o arquivo não for encontrado, uma `FileNotFoundException` é lançada.
+1. **Extract (Extraction)**:
+   - The function receives a CSV file name as a parameter.
+   - `S3Bucket` reads the file from the configured S3 bucket, returning the content as a byte array.
+   - The S3 URL is resolved from the configuration (`s3.url`), extracting the bucket and prefix/path.
+   - If the file is not found, a `FileNotFoundException` is thrown.
 
-2. **Transform (Transformação)**:
-   - O `CsvService` faz o parsing do conteúdo CSV (array de bytes) para uma lista de objetos `Book`.
-   - Utiliza a biblioteca OpenCSV com anotações `@CsvBindByName` para mapear as colunas do CSV (titulo, autor, genero, periodo) para os atributos do modelo `Book`.
-   - O parsing ignora linhas em branco e espaços em branco no início das linhas.
+2. **Transform (Transformation)**:
+   - `CsvService` parses the CSV content (byte array) into a list of `Book` objects.
+   - Uses the OpenCSV library with `@CsvBindByName` annotations to map CSV columns (titulo, autor, genero, periodo) to `Book` model attributes.
+   - Parsing ignores blank lines and whitespace at the beginning of lines.
 
-3. **Load (Carga)**:
-   - Cada objeto `Book` é convertido para `BookEntity` utilizando o `BookMapper` (MapStruct).
-   - Os livros são salvos no DynamoDB através do `BookRepository`, utilizando streams e lambdas para processar cada item.
-   - A tabela DynamoDB utiliza uma chave composta:
-     - **Partition Key**: `autor` (autor do livro)
-     - **Sort Key**: `genero` (gênero do livro)
-   - Cada livro é persistido individualmente, com logs detalhados de sucesso ou erro.
+3. **Load (Loading)**:
+   - Each `Book` object is converted to `BookEntity` using `BookMapper` (MapStruct).
+   - Books are saved to DynamoDB through `BookRepository`, using streams and lambdas to process each item.
+   - The DynamoDB table uses a composite key:
+     - **Partition Key**: `autor` (book author)
+     - **Sort Key**: `genero` (book genre)
+   - Each book is persisted individually, with detailed logs of success or error.
 
-### Tratamento de Erros
+### Error Handling
 
-O código implementa tratamento de erros em três níveis:
+The code implements error handling at three levels:
 
-- **`FileNotFoundException`**: Quando o arquivo não é encontrado no S3.
-- **`ProcessingException`**: Para erros durante o parsing do CSV ou persistência no DynamoDB.
-- **Erros inesperados**: Capturados e encapsulados em `ProcessingException` com mensagens descritivas.
+- **`FileNotFoundException`**: When the file is not found in S3.
+- **`ProcessingException`**: For errors during CSV parsing or persistence in DynamoDB.
+- **Unexpected errors**: Captured and encapsulated in `ProcessingException` with descriptive messages.
 
-Todos os erros são logados utilizando SLF4J antes de serem relançados.
+All errors are logged using SLF4J before being rethrown.
 
-### Configuração e Injeção de Dependências
+### Configuration and Dependency Injection
 
-A aplicação utiliza Jakarta CDI (Contexts and Dependency Injection) para injeção de dependências:
+The application uses Jakarta CDI (Contexts and Dependency Injection) for dependency injection:
 
-- Classes marcadas com `@Singleton` são gerenciadas como singletons.
-- Dependências são injetadas via construtores utilizando `@RequiredArgsConstructor` do Lombok.
-- O `Configuration` carrega as propriedades do arquivo `application.properties` na inicialização.
-- O `DynamoDbClientFactory` cria o cliente DynamoDB Enhanced Client necessário para operações no banco.
+- Classes marked with `@Singleton` are managed as singletons.
+- Dependencies are injected via constructors using Lombok's `@RequiredArgsConstructor`.
+- `Configuration` loads properties from the `application.properties` file on initialization.
+- `DynamoDbClientFactory` creates the DynamoDB Enhanced Client necessary for database operations.
 
-### Arquitetura
+### Architecture
 
-A aplicação segue uma arquitetura em camadas:
+The application follows a layered architecture:
 
-- **Camada de Aplicação**: `BookApplication` - orquestra o fluxo de negócio.
-- **Camada de Domínio**: Modelos (`Book`), serviços (`CsvService`) e exceções específicas do domínio.
-- **Camada de Repositório**: Acesso a dados externos (S3 e DynamoDB).
-- **Camada Core**: Configurações e factories para infraestrutura AWS.
+- **Application Layer**: `BookApplication` - orchestrates the business flow.
+- **Domain Layer**: Models (`Book`), services (`CsvService`), and domain-specific exceptions.
+- **Repository Layer**: Access to external data (S3 and DynamoDB).
+- **Core Layer**: Configurations and factories for AWS infrastructure.
 
-Esta separação facilita a manutenção, testabilidade e evolução do código.
+This separation facilitates maintenance, testability, and code evolution.
